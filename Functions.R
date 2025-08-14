@@ -22,11 +22,6 @@ setwd("/Users/Username/Downloads/VMT_Elasticities/Data/")
 # Suppress dplyr summaries
 options(dplyr.summarise.inform = FALSE)
 
-# Read MSA data
-msa <- read.csv("MSAs/MSAs_2003.csv") %>%
-  mutate(County_ID = paste0(State_Code, "_", County_Code)) %>%
-  select(County_ID, MSA_Name)
-
 # Function to clean HPMS data
 clean_hpms <- function(filepath_universe,
                        state_code_name_universe, 
