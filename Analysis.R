@@ -114,8 +114,8 @@ hpms_df_msa_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class1_Total, Lane
 
 df_panel <- pdata.frame(hpms_df_msa_model, index = c("MSA_Name", "Year"))
 
-model1 <- plm(log(VKT_Class1_Total + 1) ~ log(Lane_Km_Class1_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model1 <- run_model(df_panel, "log(VKT_Class1_Total + 1)", c("log(Lane_Km_Class1_Total + 1)", "log(Total_Population + 1)"),
+                    "MSA_Name", "Year")
 
 # Model 2: Class 2
 hpms_df_msa_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class2_Total, Lane_Km_Class2_Total, Total_Population) %>%
@@ -126,8 +126,8 @@ hpms_df_msa_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class2_Total, Lane
 
 df_panel <- pdata.frame(hpms_df_msa_model, index = c("MSA_Name", "Year"))
 
-model2 <- plm(log(VKT_Class2_Total + 1) ~ log(Lane_Km_Class2_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model2 <- run_model(df_panel, "log(VKT_Class2_Total + 1)", c("log(Lane_Km_Class2_Total + 1)", "log(Total_Population + 1)"),
+                    "MSA_Name", "Year")
 
 # Model 3: Class 3
 hpms_df_msa_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class3_Total, Lane_Km_Class3_Total, Total_Population) %>%
@@ -138,8 +138,8 @@ hpms_df_msa_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class3_Total, Lane
 
 df_panel <- pdata.frame(hpms_df_msa_model, index = c("MSA_Name", "Year"))
 
-model3 <- plm(log(VKT_Class3_Total + 1) ~ log(Lane_Km_Class3_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model3 <- run_model(df_panel, "log(VKT_Class3_Total + 1)", c("log(Lane_Km_Class3_Total + 1)", "log(Total_Population + 1)"),
+                    "MSA_Name", "Year")
 
 # Model 4: Class 1 - 3
 hpms_df_msa_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class3_Total, Lane_Km_Class3_Total, Total_Population) %>%
@@ -152,10 +152,37 @@ hpms_df_msa_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class3_Total, Lane
 
 df_panel <- pdata.frame(hpms_df_msa_model, index = c("MSA_Name", "Year"))
 
-model4 <- plm(log(VKT_Class1_3_Total + 1) ~ log(Lane_Km_Class1_3_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model4 <- run_model(df_panel, "log(VKT_Class1_3_Total + 1)", c("log(Lane_Km_Class1_3_Total + 1)", "log(Total_Population + 1)"),
+                    "MSA_Name", "Year")
 
-stargazer(model1, model2, model3, model4, type = "html", title = "Table 1: U.S. MSA VKT Elasticities by Roadway Class")
+models <- list(model1, model2, model3, model4)
+
+se_list <- lapply(models, function(mod) {
+  se_vec <- mod$se
+  names(se_vec) <- names(coef(mod))
+  se_vec[names(coef(mod))]
+})
+
+se_p_list <- lapply(models, function(mod) {
+  se_p_vec <- mod$se_p
+  names(se_p_vec) <- names(coef(mod))
+  se_p_vec[names(coef(mod))]
+})
+
+stargazer(models,
+          type = "html",
+          title = "Table 1: U.S. MSA VKT Elasticities by Roadway Class",
+          se = se_list,
+          p = se_p_list,
+          dep.var.labels = c("VKT Class 1", "VKT Class 2", "VKT Class 3", "VKT Class 1 - 3"),
+          covariate.labels = c("Lane Km Class 1", "Lane Km Class 2", "Lane Km Class 3", "Lane Km Class 1 - 3", "Population"),
+          omit.stat = "all",
+          add.lines = list(
+            c("Observations", c(nobs(model1), nobs(model2), nobs(model3), nobs(model4))),
+            c("Adjusted R2", c(model1$r2_adj, model2$r2_adj, model3$r2_adj, model4$r2_adj)),
+            c("Adjusted R2 Within", c(model1$r2_within_adj, model2$r2_within_adj, model3$r2_within_adj, model4$r2_within_adj)),
+            c("Robust F Statistic", c(model1$wald, model2$wald, model3$wald, model4$wald))))
+
 
 
 ### Table 2: CA MSA Elasticities by Functional Class
@@ -173,8 +200,8 @@ hpms_df_msa_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class1_Total, L
 
 df_panel <- pdata.frame(hpms_df_msa_model, index = c("MSA_Name", "Year"))
 
-model1 <- plm(log(VKT_Class1_Total + 1) ~ log(Lane_Km_Class1_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model1 <- run_model(df_panel, "log(VKT_Class1_Total + 1)", c("log(Lane_Km_Class1_Total + 1)", "log(Total_Population + 1)"),
+                    "MSA_Name", "Year")
 
 # Model 2: Class 2
 hpms_df_msa_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class2_Total, Lane_Km_Class2_Total, Total_Population) %>%
@@ -185,8 +212,8 @@ hpms_df_msa_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class2_Total, L
 
 df_panel <- pdata.frame(hpms_df_msa_model, index = c("MSA_Name", "Year"))
 
-model2 <- plm(log(VKT_Class2_Total + 1) ~ log(Lane_Km_Class2_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model2 <- run_model(df_panel, "log(VKT_Class2_Total + 1)", c("log(Lane_Km_Class2_Total + 1)", "log(Total_Population + 1)"),
+                    "MSA_Name", "Year")
 
 # Model 3: Class 3
 hpms_df_msa_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class3_Total, Lane_Km_Class3_Total, Total_Population) %>%
@@ -197,8 +224,8 @@ hpms_df_msa_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class3_Total, L
 
 df_panel <- pdata.frame(hpms_df_msa_model, index = c("MSA_Name", "Year"))
 
-model3 <- plm(log(VKT_Class3_Total + 1) ~ log(Lane_Km_Class3_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model3 <- run_model(df_panel, "log(VKT_Class3_Total + 1)", c("log(Lane_Km_Class3_Total + 1)", "log(Total_Population + 1)"),
+                    "MSA_Name", "Year")
 
 # Model 4: Class 1 - 3
 hpms_df_msa_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class3_Total, Lane_Km_Class3_Total, Total_Population) %>%
@@ -211,10 +238,37 @@ hpms_df_msa_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class3_Total, L
 
 df_panel <- pdata.frame(hpms_df_msa_model, index = c("MSA_Name", "Year"))
 
-model4 <- plm(log(VKT_Class1_3_Total + 1) ~ log(Lane_Km_Class1_3_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model4 <- run_model(df_panel, "log(VKT_Class1_3_Total + 1)", c("log(Lane_Km_Class1_3_Total + 1)", "log(Total_Population + 1)"),
+                    "MSA_Name", "Year")
 
-stargazer(model1, model2, model3, model4, type = "text", title = "Table 2: CA MSA VKT Elasticities by Roadway Class")
+models <- list(model1, model2, model3, model4)
+
+se_list <- lapply(models, function(mod) {
+  se_vec <- mod$se
+  names(se_vec) <- names(coef(mod))
+  se_vec[names(coef(mod))]
+})
+
+se_p_list <- lapply(models, function(mod) {
+  se_p_vec <- mod$se_p
+  names(se_p_vec) <- names(coef(mod))
+  se_p_vec[names(coef(mod))]
+})
+
+stargazer(models,
+          type = "html",
+          title = "Table 2: CA MSA VKT Elasticities by Roadway Class",
+          se = se_list,
+          p = se_p_list,
+          dep.var.labels = c("VKT Class 1", "VKT Class 2", "VKT Class 3", "VKT Class 1 - 3"),
+          covariate.labels = c("Lane Km Class 1", "Lane Km Class 2", "Lane Km Class 3", "Lane Km Class 1 - 3", "Population"),
+          omit.stat = "all",
+          add.lines = list(
+            c("Observations", c(nobs(model1), nobs(model2), nobs(model3), nobs(model4))),
+            c("Adjusted R2", c(model1$r2_adj, model2$r2_adj, model3$r2_adj, model4$r2_adj)),
+            c("Adjusted R2 Within", c(model1$r2_within_adj, model2$r2_within_adj, model3$r2_within_adj, model4$r2_within_adj)),
+            c("Robust F Statistic", c(model1$wald, model2$wald, model3$wald, model4$wald))))
+
 
 
 ### Table 3: County Elasticities by Functional Class
@@ -225,8 +279,8 @@ hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class1_Total, L
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model1 <- plm(log(VKT_Class1_Total + 1) ~ log(Lane_Km_Class1_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model1 <- run_model(df_panel, "log(VKT_Class1_Total + 1)", c("log(Lane_Km_Class1_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
 # Model 2: Class 2
 hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class2_Total, Lane_Km_Class2_Total, Total_Population) %>%
@@ -234,8 +288,8 @@ hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class2_Total, L
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model2 <- plm(log(VKT_Class2_Total + 1) ~ log(Lane_Km_Class2_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model2 <- run_model(df_panel, "log(VKT_Class2_Total + 1)", c("log(Lane_Km_Class2_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
 # Model 3: Class 3
 hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class3_Total, Lane_Km_Class3_Total, Total_Population) %>%
@@ -243,8 +297,8 @@ hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class3_Total, L
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model3 <- plm(log(VKT_Class3_Total + 1) ~ log(Lane_Km_Class3_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model3 <- run_model(df_panel, "log(VKT_Class3_Total + 1)", c("log(Lane_Km_Class3_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
 # Model 4: Class 1 - 3
 hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class3_Total, Lane_Km_Class3_Total, Total_Population) %>%
@@ -254,10 +308,36 @@ hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class3_Total, L
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model4 <- plm(log(VKT_Class1_3_Total + 1) ~ log(Lane_Km_Class1_3_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model4 <- run_model(df_panel, "log(VKT_Class1_3_Total + 1)", c("log(Lane_Km_Class1_3_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
-stargazer(model1, model2, model3, model4, type = "text", title = "Table 3: U.S. County VKT Elasticities by Roadway Class")
+models <- list(model1, model2, model3, model4)
+
+se_list <- lapply(models, function(mod) {
+  se_vec <- mod$se
+  names(se_vec) <- names(coef(mod))
+  se_vec[names(coef(mod))]
+})
+
+se_p_list <- lapply(models, function(mod) {
+  se_p_vec <- mod$se_p
+  names(se_p_vec) <- names(coef(mod))
+  se_p_vec[names(coef(mod))]
+})
+
+stargazer(models,
+          type = "html",
+          title = "Table 3: U.S. County VKT Elasticities by Roadway Class",
+          se = se_list,
+          p = se_p_list,
+          dep.var.labels = c("VKT Class 1", "VKT Class 2", "VKT Class 3", "VKT Class 1 - 3"),
+          covariate.labels = c("Lane Km Class 1", "Lane Km Class 2", "Lane Km Class 3", "Lane Km Class 1 - 3", "Population"),
+          omit.stat = "all",
+          add.lines = list(
+            c("Observations", c(nobs(model1), nobs(model2), nobs(model3), nobs(model4))),
+            c("Adjusted R2", c(model1$r2_adj, model2$r2_adj, model3$r2_adj, model4$r2_adj)),
+            c("Adjusted R2 Within", c(model1$r2_within_adj, model2$r2_within_adj, model3$r2_within_adj, model4$r2_within_adj)),
+            c("Robust F Statistic", c(model1$wald, model2$wald, model3$wald, model4$wald))))
 
 
 ### Table 4: CA County Elasticities by Functional Class
@@ -272,8 +352,8 @@ hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class1_Total
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model1 <- plm(log(VKT_Class1_Total + 1) ~ log(Lane_Km_Class1_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model1 <- run_model(df_panel, "log(VKT_Class1_Total + 1)", c("log(Lane_Km_Class1_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
 # Model 2: Class 2
 hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class2_Total, Lane_Km_Class2_Total, Total_Population) %>%
@@ -281,8 +361,8 @@ hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class2_Total
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model2 <- plm(log(VKT_Class2_Total + 1) ~ log(Lane_Km_Class2_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model2 <- run_model(df_panel, "log(VKT_Class2_Total + 1)", c("log(Lane_Km_Class2_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
 # Model 3: Class 3
 hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class3_Total, Lane_Km_Class3_Total, Total_Population) %>%
@@ -290,8 +370,8 @@ hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class3_Total
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model3 <- plm(log(VKT_Class3_Total + 1) ~ log(Lane_Km_Class3_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model3 <- run_model(df_panel, "log(VKT_Class3_Total + 1)", c("log(Lane_Km_Class3_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
 # Model 4: Class 1 - 3
 hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class3_Total, Lane_Km_Class3_Total, Total_Population) %>%
@@ -301,10 +381,36 @@ hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class3_Total
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model4 <- plm(log(VKT_Class1_3_Total + 1) ~ log(Lane_Km_Class1_3_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model4 <- run_model(df_panel, "log(VKT_Class1_3_Total + 1)", c("log(Lane_Km_Class1_3_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
-stargazer(model1, model2, model3, model4, type = "text", title = "Table 3: CA County VKT Elasticities by Roadway Class")
+models <- list(model1, model2, model3, model4)
+
+se_list <- lapply(models, function(mod) {
+  se_vec <- mod$se
+  names(se_vec) <- names(coef(mod))
+  se_vec[names(coef(mod))]
+})
+
+se_p_list <- lapply(models, function(mod) {
+  se_p_vec <- mod$se_p
+  names(se_p_vec) <- names(coef(mod))
+  se_p_vec[names(coef(mod))]
+})
+
+stargazer(models,
+          type = "html",
+          title = "Table 4: CA County VKT Elasticities by Roadway Class",
+          se = se_list,
+          p = se_p_list,
+          dep.var.labels = c("VKT Class 1", "VKT Class 2", "VKT Class 3", "VKT Class 1 - 3"),
+          covariate.labels = c("Lane Km Class 1", "Lane Km Class 2", "Lane Km Class 3", "Lane Km Class 1 - 3", "Population"),
+          omit.stat = "all",
+          add.lines = list(
+            c("Observations", c(nobs(model1), nobs(model2), nobs(model3), nobs(model4))),
+            c("Adjusted R2", c(model1$r2_adj, model2$r2_adj, model3$r2_adj, model4$r2_adj)),
+            c("Adjusted R2 Within", c(model1$r2_within_adj, model2$r2_within_adj, model3$r2_within_adj, model4$r2_within_adj)),
+            c("Robust F Statistic", c(model1$wald, model2$wald, model3$wald, model4$wald))))
 
 
 ### Table 5: Non-MSA County Elasticities by Functional Class
@@ -316,8 +422,8 @@ hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class1_Total, L
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model1 <- plm(log(VKT_Class1_Total + 1) ~ log(Lane_Km_Class1_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model1 <- run_model(df_panel, "log(VKT_Class1_Total + 1)", c("log(Lane_Km_Class1_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
 # Model 2: Class 2
 hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class2_Total, Lane_Km_Class2_Total, Total_Population) %>%
@@ -326,8 +432,8 @@ hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class2_Total, L
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model2 <- plm(log(VKT_Class2_Total + 1) ~ log(Lane_Km_Class2_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model2 <- run_model(df_panel, "log(VKT_Class2_Total + 1)", c("log(Lane_Km_Class2_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
 # Model 3: Class 3
 hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class3_Total, Lane_Km_Class3_Total, Total_Population) %>%
@@ -336,8 +442,8 @@ hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class3_Total, L
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model3 <- plm(log(VKT_Class3_Total + 1) ~ log(Lane_Km_Class3_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model3 <- run_model(df_panel, "log(VKT_Class3_Total + 1)", c("log(Lane_Km_Class3_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
 # Model 4: Class 1 - 3
 hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class3_Total, Lane_Km_Class3_Total, Total_Population) %>%
@@ -348,10 +454,37 @@ hpms_df_county_model <- full_coverage(hpms_df, County_ID, 3, VKT_Class3_Total, L
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model4 <- plm(log(VKT_Class1_3_Total + 1) ~ log(Lane_Km_Class1_3_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model4 <- run_model(df_panel, "log(VKT_Class1_3_Total + 1)", c("log(Lane_Km_Class1_3_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
-stargazer(model1, model2, model3, model4, type = "text", title = "Table 5: U.S. Non-MSA County VKT Elasticities by Roadway Class")
+models <- list(model1, model2, model3, model4)
+
+se_list <- lapply(models, function(mod) {
+  se_vec <- mod$se
+  names(se_vec) <- names(coef(mod))
+  se_vec[names(coef(mod))]
+})
+
+se_p_list <- lapply(models, function(mod) {
+  se_p_vec <- mod$se_p
+  names(se_p_vec) <- names(coef(mod))
+  se_p_vec[names(coef(mod))]
+})
+
+stargazer(models,
+          type = "html",
+          title = "Table 5: U.S. Non-MSA VKT Elasticities by Roadway Class",
+          se = se_list,
+          p = se_p_list,
+          dep.var.labels = c("VKT Class 1", "VKT Class 2", "VKT Class 3", "VKT Class 1 - 3"),
+          covariate.labels = c("Lane Km Class 1", "Lane Km Class 2", "Lane Km Class 3", "Lane Km Class 1 - 3", "Population"),
+          omit.stat = "all",
+          add.lines = list(
+            c("Observations", c(nobs(model1), nobs(model2), nobs(model3), nobs(model4))),
+            c("Adjusted R2", c(model1$r2_adj, model2$r2_adj, model3$r2_adj, model4$r2_adj)),
+            c("Adjusted R2 Within", c(model1$r2_within_adj, model2$r2_within_adj, model3$r2_within_adj, model4$r2_within_adj)),
+            c("Robust F Statistic", c(model1$wald, model2$wald, model3$wald, model4$wald))))
+
 
 
 ### Table 6: CA Non-MSA County Elasticities by Functional Class
@@ -367,8 +500,8 @@ hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class1_Total
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model1 <- plm(log(VKT_Class1_Total + 1) ~ log(Lane_Km_Class1_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model1 <- run_model(df_panel, "log(VKT_Class1_Total + 1)", c("log(Lane_Km_Class1_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
 # Model 2: Class 2
 hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class2_Total, Lane_Km_Class2_Total, Total_Population) %>%
@@ -377,8 +510,8 @@ hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class2_Total
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model2 <- plm(log(VKT_Class2_Total + 1) ~ log(Lane_Km_Class2_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model2 <- run_model(df_panel, "log(VKT_Class2_Total + 1)", c("log(Lane_Km_Class2_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
 # Model 3: Class 3
 hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class3_Total, Lane_Km_Class3_Total, Total_Population) %>%
@@ -387,8 +520,8 @@ hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class3_Total
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model3 <- plm(log(VKT_Class3_Total + 1) ~ log(Lane_Km_Class3_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model3 <- run_model(df_panel, "log(VKT_Class3_Total + 1)", c("log(Lane_Km_Class3_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
 # Model 4: Class 1 - 3
 hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class3_Total, Lane_Km_Class3_Total, Total_Population) %>%
@@ -399,7 +532,33 @@ hpms_df_county_model <- full_coverage(hpms_df_ca, County_ID, 3, VKT_Class3_Total
 
 df_panel <- pdata.frame(hpms_df_county_model, index = c("County_ID", "Year"))
 
-model4 <- plm(log(VKT_Class1_3_Total + 1) ~ log(Lane_Km_Class1_3_Total + 1) + log(Total_Population + 1),
-              data = df_panel, model = "within", effect = "twoway")
+model4 <- run_model(df_panel, "log(VKT_Class1_3_Total + 1)", c("log(Lane_Km_Class1_3_Total + 1)", "log(Total_Population + 1)"),
+                    "County_ID", "Year")
 
-stargazer(model1, model2, model3, model4, type = "text", title = "Table 5: CA Non-MSA County VKT Elasticities by Roadway Class")
+models <- list(model1, model2, model3, model4)
+
+se_list <- lapply(models, function(mod) {
+  se_vec <- mod$se
+  names(se_vec) <- names(coef(mod))
+  se_vec[names(coef(mod))]
+})
+
+se_p_list <- lapply(models, function(mod) {
+  se_p_vec <- mod$se_p
+  names(se_p_vec) <- names(coef(mod))
+  se_p_vec[names(coef(mod))]
+})
+
+stargazer(models,
+          type = "html",
+          title = "Table 6: CA Non-MSA VKT Elasticities by Roadway Class",
+          se = se_list,
+          p = se_p_list,
+          dep.var.labels = c("VKT Class 1", "VKT Class 2", "VKT Class 3", "VKT Class 1 - 3"),
+          covariate.labels = c("Lane Km Class 1", "Lane Km Class 2", "Lane Km Class 3", "Lane Km Class 1 - 3", "Population"),
+          omit.stat = "all",
+          add.lines = list(
+            c("Observations", c(nobs(model1), nobs(model2), nobs(model3), nobs(model4))),
+            c("Adjusted R2", c(model1$r2_adj, model2$r2_adj, model3$r2_adj, model4$r2_adj)),
+            c("Adjusted R2 Within", c(model1$r2_within_adj, model2$r2_within_adj, model3$r2_within_adj, model4$r2_within_adj)),
+            c("Robust F Statistic", c(model1$wald, model2$wald, model3$wald, model4$wald))))
