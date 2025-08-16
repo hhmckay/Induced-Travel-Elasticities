@@ -15,6 +15,7 @@ library(mapview)
 library(sf)
 library(ivreg)
 library(modelsummary)
+library(fixest)
 
 # Set working directory to folder location
 setwd("/Users/Username/Downloads/VMT_Elasticities/Data/")
@@ -284,4 +285,42 @@ full_coverage <- function(input_df, study_area, number_of_periods, ...) {
   
   return(coverage_df_out)
   
+}
+
+
+# Function to run time series regression and generate table with robust standard errors / F statistic
+run_model <- function(input_df, y_var, x_vars, analysis_unit_id, time_id) {
+  
+  vars_plm <- reformulate(termlabels = x_vars, response = y_var)
+  
+  vars_robust_x <- if(length(x_vars)) paste(x_vars, collapse = " + ") else "1"
+  
+  vars_robust <- as.formula(paste0(y_var, " ~ ", vars_robust_x, " | ", analysis_unit_id, " + ", time_id)
+  )
+  
+  model_plm <- plm(vars_plm,
+                   data = input_df,
+                   model = "within",
+                   effect = "twoway")
+  
+  model_robust <- feols(vars_robust,
+                        data = input_df,
+                        vcov = "hetero")
+  
+  se <- se(model_robust)             
+  se_p  <- pvalue(model_robust)
+  
+  observations <- obs(model_robust)
+  
+  r_squared <- r2(model_robust, "r2")
+  r_squared_war2 <- r2(model_robust, "war2")
+  
+  model_plm$se <- list(se)
+  model_plm$se_p <- list(se_p)
+  model_plm$observations <- observations
+  model_plm$r_squared <- r_squared
+  model_plm$r_squared_war2 <- r_squared_war2
+  
+  return(model_plm)
+
 }
