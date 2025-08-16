@@ -307,19 +307,36 @@ run_model <- function(input_df, y_var, x_vars, analysis_unit_id, time_id) {
                         data = input_df,
                         vcov = "hetero")
   
-  se <- se(model_robust)             
+  wald <- wald(model_robust, print = FALSE)
+  
+  if(as.numeric(wald[2]) < .01) {
+    star <- "***"
+  } else if(as.numeric(wald[2]) < .05) {
+    star <- "**"
+  } else if(as.numeric(wald[2]) < .1) {
+    star <- "*"
+  } else {
+    star <- ""
+  }
+  
+  wald_f <- round(as.numeric(wald[1]), 3)
+  
+  wald_out <- paste0(wald_f, star, " (df = ", as.numeric(wald[3]), "; ", as.numeric(wald[4]), ")")
+  
+  se <- se(model_robust)          
   se_p  <- pvalue(model_robust)
   
   observations <- obs(model_robust)
   
-  r_squared <- r2(model_robust, "r2")
-  r_squared_war2 <- r2(model_robust, "war2")
+  r_squared <- summary(model_plm)$r.squared["adjrsq"]
+  r_squared_adj <- as.numeric(fitstat(model_robust, "ar2"))
   
-  model_plm$se <- list(se)
-  model_plm$se_p <- list(se_p)
+  model_plm$se <- se
+  model_plm$se_p <- se_p
   model_plm$observations <- observations
-  model_plm$r_squared <- r_squared
-  model_plm$r_squared_war2 <- r_squared_war2
+  model_plm$r2_within_adj <- round(r_squared, 3)
+  model_plm$r2_adj <- round(r_squared_adj, 3)
+  model_plm$wald <- wald_out
   
   return(model_plm)
 
